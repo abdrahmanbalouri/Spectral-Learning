@@ -1,101 +1,97 @@
-"""Matplotlib/Seaborn plots for the spectral-learning workflow."""
-
-from pathlib import Path
-
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
+import numpy as np
 
+def plot_cumulative(pca, svd, variance_target, filename):
+    plt.figure(figsize=(8, 5))
+    plt.plot(np.cumsum(pca.full_ratios_), label='PCA Cumulative Variance', lw=2)
+    plt.plot(np.cumsum(svd.full_ratios_), label='SVD Cumulative Variance', lw=2, linestyle='--')
+    plt.axhline(y=variance_target, color='r', linestyle=':', label=f'Target ({variance_target})')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Cumulative Explained Variance Ratio')
+    plt.title('Cumulative Variance Explained')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
-def _save(fig, path):
-    if path:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
+def plot_variance_bars(pca, svd, k_show, filename):
+    plt.figure(figsize=(8, 5))
+    x = np.arange(1, k_show + 1)
+    width = 0.35
+    plt.bar(x - width/2, pca.full_ratios_[:k_show], width, label='PCA')
+    plt.bar(x + width/2, svd.full_ratios_[:k_show], width, label='SVD')
+    plt.xlabel('Principal Component')
+    plt.ylabel('Variance Ratio')
+    plt.title('Variance Ratio per Component')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
+def plot_2d(X_2d, y, title, filename):
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=X_2d[:, 0], y=X_2d[:, 1], hue=y, palette='viridis', alpha=0.8, legend='full')
+    plt.title(title)
+    plt.xlabel('Component 1')
+    plt.ylabel('Component 2')
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
-def plot_cumulative(pca, svd, threshold, path):
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(np.arange(1, len(pca.full_ratios_) + 1), np.cumsum(pca.full_ratios_), "o-", label="PCA")
-    ax.plot(np.arange(1, len(svd.full_ratios_) + 1), np.cumsum(svd.full_ratios_), "s--", label="SVD")
-    ax.axhline(threshold, color="gray", linestyle=":", label=f"{threshold:.0%} target")
-    ax.set(xlabel="Components", ylabel="Cumulative variance", title="Cumulative explained variance")
-    ax.legend()
-    _save(fig, path)
+def plot_3d(X_3d, y, title, filename):
+    fig = plt.figure(figsize=(9, 7))
+    ax = fig.add_subplot(projection='3d')
+    sc = ax.scatter(X_3d[:, 0], X_3d[:, 1], X_3d[:, 2], c=y, cmap='viridis', alpha=0.8)
+    ax.set_title(title)
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.set_zlabel('PC3')
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
+def plot_cluster_panels(pca_2d, svd_2d, y, pca_res, svd_res, filename):
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    sns.scatterplot(ax=axes[0], x=pca_2d[:, 0], y=pca_2d[:, 1], hue=pca_res['labels'], palette='Set1')
+    axes[0].setTitle('PCA K-means Clusters')
+    sns.scatterplot(ax=axes[1], x=svd_2d[:, 0], y=svd_2d[:, 1], hue=svd_res['labels'], palette='Set1')
+    axes[1].setTitle('SVD K-means Clusters')
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
-def plot_variance_bars(pca, svd, k, path):
-    x = np.arange(1, k + 1)
-    width = 0.38
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.bar(x - width / 2, pca.explained_variance_ratio_[:k], width, label="PCA")
-    ax.bar(x + width / 2, svd.explained_variance_ratio_[:k], width, label="SVD")
-    ax.set(xlabel="Component", ylabel="Variance ratio", title="PCA vs SVD variance per component")
-    ax.set_xticks(x)
-    ax.legend()
-    _save(fig, path)
+def plot_loadings(pca, svd, features, k_show, filename):
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(pca.components_[:k_show, :], annot=True, fmt='.2f', cmap='coolwarm', xticklabels=features)
+    plt.title('PCA Feature Loadings')
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
+def plot_reconstruction(pca_errors, svd_errors, filename):
+    plt.figure(figsize=(8, 5))
+    plt.plot(pca_errors, label='PCA Reconstruction Error')
+    plt.plot(svd_errors, label='SVD Reconstruction Error', linestyle='--')
+    plt.xlabel('Number of Components (k)')
+    plt.ylabel('Error Rate')
+    plt.title('Reconstruction Error vs. Components')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
 
-def plot_2d(scores, labels, title, path, xlabel="Component 1", ylabel="Component 2"):
-    fig, ax = plt.subplots(figsize=(6, 5))
-    points = ax.scatter(scores[:, 0], scores[:, 1], c=labels, cmap="tab10", s=20, alpha=0.85)
-    fig.colorbar(points, ax=ax, label="Label")
-    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    _save(fig, path)
-
-
-def plot_3d(scores, labels, title, path):
-    fig = plt.figure(figsize=(7, 6))
-    ax = fig.add_subplot(111, projection="3d")
-    ax.scatter(scores[:, 0], scores[:, 1], scores[:, 2], c=labels, cmap="tab10", s=16)
-    ax.set(xlabel="Component 1", ylabel="Component 2", zlabel="Component 3", title=title)
-    _save(fig, path)
-
-
-def plot_cluster_panels(pca_scores, svd_scores, y, pca_result, svd_result, path):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-    panels = [
-        (pca_scores, y, "PCA - true labels"),
-        (pca_scores, pca_result["labels"], "PCA - K-means clusters"),
-        (svd_scores, y, "SVD - true labels"),
-        (svd_scores, svd_result["labels"], "SVD - K-means clusters"),
-    ]
-    for ax, (scores, labels, title) in zip(axes.ravel(), panels):
-        ax.scatter(scores[:, 0], scores[:, 1], c=labels, cmap="tab10", s=14)
-        ax.set(title=title, xlabel="Component 1", ylabel="Component 2")
-    fig.tight_layout()
-    _save(fig, path)
-
-
-def plot_loadings(pca, svd, feature_names, k, path):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 4.5))
-    sns.heatmap(
-        pca.components_[:k], cmap="coolwarm", center=0, xticklabels=feature_names,
-        yticklabels=[f"PC{i + 1}" for i in range(k)], ax=axes[0],
-    )
-    sns.heatmap(
-        svd.Vt_[:k], cmap="coolwarm", center=0, xticklabels=feature_names,
-        yticklabels=[f"SV{i + 1}" for i in range(k)], ax=axes[1],
-    )
-    axes[0].set_title("PCA loadings")
-    axes[1].set_title("SVD right singular vectors")
-    fig.tight_layout()
-    _save(fig, path)
-
-
-def plot_reconstruction(pca_errors, svd_errors, path):
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(range(len(pca_errors)), pca_errors, "o-", label="PCA")
-    ax.plot(range(len(svd_errors)), svd_errors, "s--", label="SVD")
-    ax.set(xlabel="Components kept", ylabel="Reconstruction MSE", title="Reconstruction error")
-    ax.legend()
-    _save(fig, path)
-
-
-def plot_accuracy(ks, pca_acc, svd_acc, path):
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(ks, pca_acc, "o-", label="PCA + k-NN")
-    ax.plot(ks, svd_acc, "s--", label="SVD + k-NN")
-    ax.set(xlabel="Components kept", ylabel="k-NN accuracy", title="Downstream classification vs components")
-    ax.legend()
-    _save(fig, path)
+def plot_accuracy(ks, pca_acc, svd_acc, filename):
+    plt.figure(figsize=(8, 5))
+    plt.plot(ks, pca_acc, label='PCA + KNN Accuracy')
+    plt.plot(ks, svd_acc, label='SVD + KNN Accuracy', linestyle='--')
+    plt.xlabel('Number of Components')
+    plt.ylabel('KNN Accuracy')
+    plt.title('Classification Accuracy vs Components')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
