@@ -18,12 +18,10 @@ def standardize(X):
 
 
 def component_count(ratios, target):
-    """Choose a component count from an integer or variance target."""
     if isinstance(target, float):
         if not 0 < target <= 1:
             raise ValueError("variance target must be in (0, 1]")
-        count = np.searchsorted(np.cumsum(ratios), target) + 1
-        return int(min(count, len(ratios)))
+        return int(np.argmax(np.cumsum(ratios) >= target) + 1)
     if not 1 <= target <= len(ratios):
         raise ValueError("invalid number of components")
     return int(target)
