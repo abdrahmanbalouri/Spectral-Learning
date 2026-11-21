@@ -1,22 +1,32 @@
+"""Shared NumPy operations."""
+
 import numpy as np
 
-def compute_covariance(X):
-    """Compute covariance matrix of standardized data."""
-    n_samples = X.shape[0]
-    return (X.T @ X) / (n_samples - 1)
 
-def eig_desc(cov_matrix):
-    """Compute eigenvalues and eigenvectors sorted in descending order."""
-    eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
-    idx = np.argsort(eigenvalues)[::-1]
-    return eigenvalues[idx], eigenvectors[:, idx]
+def check_matrix(X):
+    """Convert input to a valid numerical matrix."""
+    X = np.asarray(X, dtype=float)
+    if X.ndim != 2 or X.shape[1] == 0 or not np.isfinite(X).all():
+        raise ValueError("X must be a finite 2-D matrix")
+    return X
 
-def reconstruction_errors(singular_values, n_samples, n_features):
-    """Calculate reconstruction error curves based on singular values."""
-    errors = []
-    total_energy = np.sum(singular_values ** 2)
-    for k in range(1, len(singular_values) + 1):
-        retained_energy = np.sum(singular_values[:k] ** 2)
-        err = 1.0 - (retained_energy / (total_energy + 1e-10))
-        errors.append(max(0.0, err))
-    return errors
+
+def standardize(X):
+    """Scale each feature to mean 0 and standard deviation 1."""
+    X = check_matrix(X)
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0)
+    std[std == 0] = 1
+    return (X - mean) / std
+
+
+def component_count(ratios, target):
+    """Choose a component count from an integer or variance target."""
+    if isinstance(target, float):
+        if not 0 < target <= 1:
+            raise ValueError("variance target must be in (0, 1]")
+        count = np.searchsorted(np.cumsum(ratios), target) + 1
+        return int(min(count, len(ratios)))
+    if not 1 <= target <= len(ratios):
+        raise ValueError("invalid number of components")
+    return int(target)

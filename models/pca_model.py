@@ -1,46 +1,40 @@
+"""PCA implemented from scratch with NumPy."""
+
 import numpy as np
-from utils.matrix_operations import eig_desc
+
+from utils.matrix_operations import check_matrix, component_count
 
 
 class PCA:
-    def __init__(self, n_components=None):
+    def __init__(self, n_components=0.95):
         self.n_components = n_components
 
     def fit(self, X):
-        X = np.asarray(X, dtype=float)
-
-        n_samples, n_features = X.shape
+        """Center data and find the eigenvectors of its covariance matrix."""
+        X = check_matrix(X)
+        if len(X) < 2:
+            raise ValueError("PCA needs at least two rows")
 
         self.mean_ = np.mean(X, axis=0)
-        X_centered = X - self.mean_
+        centered = X - self.mean_
+        covariance = (centered.T @ centered) / (len(X) - 1)
 
-        covariance = (X_centered.T @ X_centered) / (n_samples - 1)
+        eigenvalues, eigenvectors = np.linalg.eig(covariance)
+        order = np.argsort(eigenvalues)[::-1]
+        eigenvalues = np.clip(np.real(eigenvalues[order]), 0, None)
+        eigenvectors = np.real(eigenvectors[:, order])
 
-        values, vectors = eig_desc(covariance)
-
-        values = np.clip(values, 0, None)
-
-        k = self.n_components or n_features
-
-        self.components_ = vectors[:, :k].T.copy()
-
-        total = np.sum(values)
-
-        self.explained_variance_ = values[:k]
-        self.explained_variance_ratio_ = values[:k] / total
-        self.cumulative_variance_ratio_ = np.cumsum(
-            self.explained_variance_ratio_
+        self.explained_variance_ratio_ = eigenvalues / np.sum(eigenvalues)
+        self.n_components_ = component_count(
+            self.explained_variance_ratio_, self.n_components
         )
-
+        self.components_ = eigenvectors[:, : self.n_components_].T
         return self
 
     def transform(self, X):
-        X = np.asarray(X, dtype=float)
-        return (X - self.mean_) @ self.components_.T
+        """Project data onto the selected principal components."""
+        return (check_matrix(X) - self.mean_) @ self.components_.T
 
-    def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)
-
-    def inverse_transform(self, X):
-        return X @ self.components_ + self.mean_
+    def inverse_transform(self, reduced_X):
+        """Reconstruct data from principal components."""
+        return np.asarray(reduced_X) @ self.components_ + self.mean_

@@ -1,54 +1,38 @@
+"""SVD dimensionality reduction implemented with NumPy."""
+
 import numpy as np
-from utils.matrix_operations import eig_desc
+
+from utils.matrix_operations import check_matrix, component_count
 
 
 class SVD:
+    def __init__(self, n_components=0.95):
+        self.n_components = n_components
+
     def fit(self, X):
-        A = np.asarray(X, dtype=float)
+        """Center data and decompose it into U, singular values, and Vt."""
+        X = check_matrix(X)
+        if len(X) < 2:
+            raise ValueError("SVD needs at least two rows")
 
-        m, n = A.shape
+        self.mean_ = np.mean(X, axis=0)
+        centered = X - self.mean_
+        self.U_, self.singular_values_, self.Vt_ = np.linalg.svd(
+            centered, full_matrices=False
+        )
 
-        if m >= n:
-            values, V = eig_desc(A.T @ A)
-
-            values = np.clip(values, 0, None)
-            singular_values = np.sqrt(values)
-
-            mask = singular_values > 1e-12
-
-            self.singular_values_ = singular_values[mask]
-            V = V[:, mask]
-
-            self.U_ = (
-                A @ V
-            ) / self.singular_values_[None, :]
-
-            self.Vt_ = V.T
-
-        else:
-            values, U = eig_desc(A @ A.T)
-
-            values = np.clip(values, 0, None)
-            singular_values = np.sqrt(values)
-
-            mask = singular_values > 1e-12
-
-            self.singular_values_ = singular_values[mask]
-            U = U[:, mask]
-
-            self.U_ = U
-
-            self.Vt_ = (
-                U.T @ A
-            ) / self.singular_values_[:, None]
-
-        self.components_ = self.Vt_
-
+        squared = self.singular_values_**2
+        self.explained_variance_ratio_ = squared / np.sum(squared)
+        self.n_components_ = component_count(
+            self.explained_variance_ratio_, self.n_components
+        )
+        self.components_ = self.Vt_[: self.n_components_]
         return self
 
-    def reconstruct(self, n_components=None):
-        k = n_components or len(self.singular_values_)
+    def transform(self, X):
+        """Project data onto the selected right-singular vectors."""
+        return (check_matrix(X) - self.mean_) @ self.components_.T
 
-        return (
-            self.U_[:, :k] * self.singular_values_[None, :k]
-        ) @ self.Vt_[:k, :]
+    def reconstruct(self, reduced_X):
+        """Reconstruct data from its reduced representation."""
+        return np.asarray(reduced_X) @ self.components_ + self.mean_
