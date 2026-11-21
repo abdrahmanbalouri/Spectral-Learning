@@ -1,6 +1,6 @@
 # Spectral Learning
 
-Simple implementation of PCA and SVD on the UCI Wine Quality dataset. PCA uses `numpy.linalg.eig`, SVD uses `numpy.linalg.svd`, and no ready-made decomposition model is used.
+Simple implementation of PCA and SVD on the UCI red Wine Quality dataset. PCA uses `numpy.linalg.eig`, SVD uses `numpy.linalg.svd`, and no ready-made decomposition model is used.
 
 ## Project Structure
 
@@ -36,7 +36,7 @@ python main.py
 1. Load the semicolon-separated Wine Quality CSV.
 2. Remove duplicates, fill missing feature values, and standardize every feature.
 3. Apply PCA and SVD while retaining at least 95% of the variance.
-4. Run K-means on the first two reduced dimensions.
+4. Run K-means on all retained dimensions and use the first two for plotting.
 5. Evaluate clustering with silhouette score and adjusted Rand index (ARI).
 6. Save variance, projection, clustering, and loading plots in `outputs/`.
 
@@ -52,7 +52,13 @@ PCA and centered SVD should retain the same variance. Component signs can differ
 
 ## Component Choice
 
-The smallest number of components reaching 95% cumulative variance is kept. This removes low-variance noise, keeps the model simple, and reduces overfitting. The cumulative-variance plot shows whether this choice is sufficient.
+The smallest number of components reaching 95% cumulative variance is kept. This avoids unnecessary dimensions and limits the amount of low-variance noise passed to K-means. Since this is an unsupervised workflow, the cumulative-variance curve is used instead of a supervised learning curve to judge whether enough components were kept.
+
+## Results
+
+With the included dataset, cleaning leaves 1,359 rows and 11 features. Both methods select 9 components and retain 97.8% of the variance. Their results match because PCA on a covariance matrix and SVD on the same centered matrix find the same component directions; component signs may still differ.
+
+The largest absolute loading is fixed acidity for PC1, total sulfur dioxide for PC2, and alcohol for PC3. These features have the strongest influence on those component directions, not necessarily on wine quality itself. K-means gives a silhouette score near 0.197 and an ARI near 0.062, so the quality labels do not form strongly separated clusters in this linear representation.
 
 ## Outputs
 

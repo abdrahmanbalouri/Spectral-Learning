@@ -13,10 +13,16 @@ def _save(path):
 
 def plot_variance(pca_ratios, svd_ratios, target, path):
     """Compare cumulative variance for PCA and SVD."""
-    x = np.arange(1, len(pca_ratios) + 1)
     plt.figure(figsize=(7, 4))
-    plt.plot(x, np.cumsum(pca_ratios), label="PCA")
-    plt.plot(x, np.cumsum(svd_ratios), "--", label="SVD")
+    plt.plot(
+        np.arange(1, len(pca_ratios) + 1), np.cumsum(pca_ratios), label="PCA"
+    )
+    plt.plot(
+        np.arange(1, len(svd_ratios) + 1),
+        np.cumsum(svd_ratios),
+        "--",
+        label="SVD",
+    )
     plt.axhline(target, color="red", linestyle=":", label="Target")
     plt.xlabel("Number of components")
     plt.ylabel("Cumulative variance")
@@ -53,12 +59,13 @@ def plot_clusters(pca_2d, svd_2d, pca_labels, svd_labels, path):
 
 def plot_loadings(pca, feature_names, path):
     """Visualize the first three principal components."""
+    count = min(3, pca.n_components_)
     sns.heatmap(
-        pca.components_[:3],
+        pca.components_[:count],
         cmap="coolwarm",
         center=0,
         xticklabels=feature_names,
-        yticklabels=["PC1", "PC2", "PC3"],
+        yticklabels=[f"PC{i}" for i in range(1, count + 1)],
     )
     plt.title("PCA Feature Loadings")
     _save(path)

@@ -6,6 +6,8 @@ from utils.matrix_operations import check_matrix, component_count
 
 
 class PCA:
+    """Reduce data using eigenvectors of its covariance matrix."""
+
     def __init__(self, n_components=0.95):
         self.n_components = n_components
 
@@ -24,7 +26,10 @@ class PCA:
         eigenvalues = np.clip(np.real(eigenvalues[order]), 0, None)
         eigenvectors = np.real(eigenvectors[:, order])
 
-        self.explained_variance_ratio_ = eigenvalues / np.sum(eigenvalues)
+        total_variance = np.sum(eigenvalues)
+        if total_variance == 0:
+            raise ValueError("PCA needs data with non-zero variance")
+        self.explained_variance_ratio_ = eigenvalues / total_variance
         self.n_components_ = component_count(
             self.explained_variance_ratio_, self.n_components
         )

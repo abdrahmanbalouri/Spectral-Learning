@@ -6,6 +6,8 @@ from utils.matrix_operations import check_matrix, component_count
 
 
 class SVD:
+    """Reduce data using its largest singular values and vectors."""
+
     def __init__(self, n_components=0.95):
         self.n_components = n_components
 
@@ -22,7 +24,10 @@ class SVD:
         )
 
         squared = self.singular_values_**2
-        self.explained_variance_ratio_ = squared / np.sum(squared)
+        total_variance = np.sum(squared)
+        if total_variance == 0:
+            raise ValueError("SVD needs data with non-zero variance")
+        self.explained_variance_ratio_ = squared / total_variance
         self.n_components_ = component_count(
             self.explained_variance_ratio_, self.n_components
         )
