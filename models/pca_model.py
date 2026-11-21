@@ -19,7 +19,7 @@ class PCA:
 
         self.mean_ = np.mean(X, axis=0)
         centered = X - self.mean_
-        covariance = (centered.T @ centered) / (len(X) - 1)
+        covariance = np.cov(centered, rowvar=False)
 
         eigenvalues, eigenvectors = np.linalg.eig(covariance)
         order = np.argsort(eigenvalues)[::-1]
