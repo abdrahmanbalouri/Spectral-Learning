@@ -14,7 +14,7 @@ def load_data(path="data/wine_quality.csv"):
         raise FileNotFoundError(f"dataset not found: {path}")
 
     data = pd.read_csv(path, sep=";").drop_duplicates()
-    target = "quality" if "quality" in data.columns else data.columns[-1]
+    target = "quality"
     data = data.apply(pd.to_numeric, errors="coerce").dropna(subset=[target])
 
     features = data.drop(columns=target)
