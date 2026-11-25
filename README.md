@@ -48,7 +48,7 @@ The included CSV is the red-wine file from the UCI Wine Quality dataset. It is s
 1. Load the semicolon-separated Wine Quality CSV.
 2. Remove duplicates, fill missing feature values, and standardize every feature with NumPy.
 3. Apply PCA and SVD while retaining at least 95% of the variance.
-4. Run K-means on all retained dimensions and use the first two for plotting.
+4. Run K-means on all retained dimensions and on two random data subsets.
 5. Evaluate clustering with silhouette score and adjusted Rand index (ARI).
 6. Save variance, projection, clustering, and loading plots in `outputs/`.
 
@@ -87,4 +87,5 @@ The largest absolute loading is fixed acidity for PC1, total sulfur dioxide for 
 - `pca_2d.png` and `svd_2d.png`: 2D projections
 - `pca_3d.png`: 3D PCA projection
 - `clusters.png`: PCA and SVD K-means patterns
+- `cluster_subsets.png`: PCA clustering patterns across two random data subsets
 - `pca_loadings.png`: contribution of features to the first components

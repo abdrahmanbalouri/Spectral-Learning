@@ -84,6 +84,23 @@ def plot_clusters(pca_2d, svd_2d, pca_labels, svd_labels, path):
     _save(path)
 
 
+def plot_cluster_subsets(subset_1, subset_2, labels_1, labels_2, path):
+    """Compare PCA clustering patterns in two random data subsets."""
+    subset_1 = _check_plot_data(subset_1, 2, labels_1)
+    subset_2 = _check_plot_data(subset_2, 2, labels_2)
+    figure, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    axes[0].scatter(subset_1[:, 0], subset_1[:, 1], c=labels_1, s=10)
+    axes[0].set_title("PCA clusters - subset 1")
+    axes[1].scatter(subset_2[:, 0], subset_2[:, 1], c=labels_2, s=10)
+    axes[1].set_title("PCA clusters - subset 2")
+
+    for axis in axes:
+        axis.set_xlabel("Component 1")
+        axis.set_ylabel("Component 2")
+    _save(path)
+
+
 def plot_loadings(pca, feature_names, path):
     """Visualize the first three principal components."""
     count = min(3, pca.n_components_)

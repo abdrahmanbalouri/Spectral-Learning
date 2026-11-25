@@ -6,6 +6,8 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 from pathlib import Path
 
+import numpy as np
+
 from models import PCA, SVD
 from utils import visualization
 from utils.clustering import evaluate_clusters
@@ -27,6 +29,11 @@ def main():
     pca_labels, pca_scores = evaluate_clusters(X_pca, y)
     svd_labels, svd_scores = evaluate_clusters(X_svd, y)
 
+    random_order = np.random.default_rng(42).permutation(len(X))
+    subset_1, subset_2 = np.array_split(random_order, 2)
+    subset_1_labels, subset_1_scores = evaluate_clusters(X_pca[subset_1], y[subset_1])
+    subset_2_labels, subset_2_scores = evaluate_clusters(X_pca[subset_2], y[subset_2])
+
     pca_error = ((X - pca.inverse_transform(X_pca)) ** 2).mean()
     svd_error = ((X - svd.reconstruct(X_svd)) ** 2).mean()
     pca_variance = pca.explained_variance_ratio_[: pca.n_components_].sum()
@@ -38,6 +45,8 @@ def main():
     print(f"SVD reconstruction MSE: {svd_error:.4f}")
     print(f"PCA scores: {pca_scores}")
     print(f"SVD scores: {svd_scores}")
+    print(f"PCA subset 1 scores: {subset_1_scores}")
+    print(f"PCA subset 2 scores: {subset_2_scores}")
 
     for number, component in enumerate(pca.components_[:3], start=1):
         top_feature = features[abs(component).argmax()]
@@ -59,6 +68,13 @@ def main():
         pca_labels,
         svd_labels,
         output / "clusters.png",
+    )
+    visualization.plot_cluster_subsets(
+        X_pca[subset_1, :2],
+        X_pca[subset_2, :2],
+        subset_1_labels,
+        subset_2_labels,
+        output / "cluster_subsets.png",
     )
     visualization.plot_loadings(pca, features, output / "pca_loadings.png")
     print(f"Plots saved in {output.resolve()}")
