@@ -31,7 +31,7 @@ class SVD:
         self.n_components_ = component_count(
             self.explained_variance_ratio_, self.n_components
         )
-        self.components_ = self.Vt_[: self.n_components_]
+        self.components_ = self.Vt_[: self.n_components_,:]
         return self
 
     def transform(self, X):

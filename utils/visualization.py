@@ -61,7 +61,7 @@ def plot_loadings(pca, feature_names, path):
     """Visualize the first three principal components."""
     count = min(3, pca.n_components_)
     sns.heatmap(
-        pca.components_[:count],
+        pca.components_[:count,:],
         cmap="coolwarm",
         center=0,
         xticklabels=feature_names,
