@@ -27,15 +27,21 @@ def main():
     pca_labels, pca_scores = evaluate_clusters(X_pca, y)
     svd_labels, svd_scores = evaluate_clusters(X_svd, y)
 
+    pca_error = ((X - pca.inverse_transform(X_pca)) ** 2).mean()
     svd_error = ((X - svd.reconstruct(X_svd)) ** 2).mean()
     pca_variance = pca.explained_variance_ratio_[: pca.n_components_].sum()
     svd_variance = svd.explained_variance_ratio_[: svd.n_components_].sum()
     print(f"Data shape: {X.shape}")
     print(f"PCA components: {pca.n_components_} ({pca_variance:.1%} variance)")
     print(f"SVD components: {svd.n_components_} ({svd_variance:.1%} variance)")
+    print(f"PCA reconstruction MSE: {pca_error:.4f}")
     print(f"SVD reconstruction MSE: {svd_error:.4f}")
     print(f"PCA scores: {pca_scores}")
     print(f"SVD scores: {svd_scores}")
+
+    for number, component in enumerate(pca.components_[:3], start=1):
+        top_feature = features[abs(component).argmax()]
+        print(f"Strongest feature in PC{number}: {top_feature}")
 
     visualization.plot_variance(
         pca.explained_variance_ratio_,
@@ -59,4 +65,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (FileNotFoundError, ValueError) as error:
+        raise SystemExit(f"Error: {error}") from error

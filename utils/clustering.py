@@ -5,7 +5,7 @@ from sklearn.metrics import adjusted_rand_score, silhouette_score
 
 
 def evaluate_clusters(X, y, seed=42):
-    """Run K-means using the number of classes found in y."""
+    """Return K-means labels plus silhouette and adjusted Rand scores."""
     n_clusters = len(set(y))
     if not 2 <= n_clusters < len(X):
         raise ValueError("clustering needs at least two classes and samples")

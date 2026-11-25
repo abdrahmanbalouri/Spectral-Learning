@@ -8,15 +8,17 @@ from utils.matrix_operations import standardize
 
 
 def load_data(path="data/wine_quality.csv"):
-    """Read, clean, and standardize the numerical dataset."""
+    """Return standardized X, quality y, and feature names from a CSV path."""
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"dataset not found: {path}")
 
     data = pd.read_csv(path, sep=";").drop_duplicates()
     target = "quality"
-    data = data.apply(pd.to_numeric, errors="coerce").dropna(subset=[target])
+    if target not in data.columns:
+        raise ValueError("dataset must contain a 'quality' column")
 
+    data = data.apply(pd.to_numeric, errors="coerce").dropna(subset=[target])
     features = data.drop(columns=target)
     features = features.fillna(features.mean())
     if features.isna().any().any():

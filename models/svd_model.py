@@ -6,13 +6,16 @@ from utils.matrix_operations import check_matrix, component_count
 
 
 class SVD:
-    """Reduce data using its largest singular values and vectors."""
+    """Reduce data using its largest singular values and vectors.
+
+    ``n_components`` can be a component count or a variance target such as 0.95.
+    """
 
     def __init__(self, n_components=0.95):
         self.n_components = n_components
 
     def fit(self, X):
-        """Center data and decompose it into U, singular values, and Vt."""
+        """Fit SVD to matrix X and return the fitted model."""
         X = check_matrix(X)
         if len(X) < 2:
             raise ValueError("SVD needs at least two rows")
@@ -31,13 +34,13 @@ class SVD:
         self.n_components_ = component_count(
             self.explained_variance_ratio_, self.n_components
         )
-        self.components_ = self.Vt_[: self.n_components_,:]
+        self.components_ = self.Vt_[: self.n_components_, :]
         return self
 
     def transform(self, X):
-        """Project data onto the selected right-singular vectors."""
+        """Return X projected onto the selected right-singular vectors."""
         return (check_matrix(X) - self.mean_) @ self.components_.T
 
     def reconstruct(self, reduced_X):
-        """Reconstruct data from its reduced representation."""
+        """Return an approximate reconstruction of reduced_X."""
         return np.asarray(reduced_X) @ self.components_ + self.mean_
